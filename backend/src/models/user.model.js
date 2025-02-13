@@ -27,7 +27,8 @@ const userSchema = Schema({
         required: true,
         lowercase: true,
         trim: true,
-        index: true
+        index: true,
+        unique: true,
     },
     password: {
         type: String,
@@ -41,17 +42,29 @@ const userSchema = Schema({
     refreshToken: {
         type: String,
     },
+    savedPallates: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "Image",
+        }
+    ],
+    myUploades: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "Image",
+        }
+    ]
 
 
 }, {
-    timeStamps: true
+    timestamps: true
 })
 
 // middlewares ->
 userSchema.pre("save", async function (next) {
 
     if (this.isModified("password")) {
-        this.password = bcrypt.hash(this.password, 10)
+        this.password = await bcrypt.hash(this.password, 10)
         next()
     }
 

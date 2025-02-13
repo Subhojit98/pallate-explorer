@@ -7,9 +7,13 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import ErrorAlert from '../components/ErrorAlert'
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
 
-const page = () => {
+const Register = () => {
 
+    const router = useRouter()
+    // hook-form ->
     const registerSchema = z.object({
         firstName: z.string().min(3).max(30),
         lastName: z.string().min(3).max(30),
@@ -26,19 +30,44 @@ const page = () => {
 
     type RegisterSchema = z.infer<typeof registerSchema>
 
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<RegisterSchema>({ resolver: zodResolver(registerSchema), mode: "onSubmit" })
+    const { register, handleSubmit, formState: { errors } } = useForm<RegisterSchema>({ resolver: zodResolver(registerSchema), mode: "onSubmit" })
+
     const [error, setError] = useState<boolean>(false)
-    const onSubmit = (data: RegisterSchema) => {
-        console.log(data)
-        reset()
+    const [isRegisterSuccess, setIsRegisterSuccess] = useState<boolean | null>(null)
+    const onSubmit = async (data: RegisterSchema) => {
+
+        const fromData = JSON.stringify(data)
+        try {
+            const res = await axios.post("http://localhost:8001/api/v1/users/register", fromData, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+
+            if (res.status === 201) {
+                setIsRegisterSuccess(true)
+                router.push("/")
+            }
+
+            else {
+                setIsRegisterSuccess(false)
+            }
+        } catch (error) {
+
+            setIsRegisterSuccess(false)
+            console.log(error)
+        }
     }
 
     useEffect(() => {
-        setError(true)
-        setTimeout(() => {
-            setError(false)
-        }, 2000)
-    }, [errors])
+        if (Object.keys(errors).length > 0) {
+            setError(true);
+            setTimeout(() => {
+                setError(false);
+            }, 2000);
+        }
+    }, [errors]);
+
     return (
         <>
             <div className="w-full h-screen bg-[#7ccde3] flex justify-center items-center">
@@ -49,6 +78,7 @@ const page = () => {
                             <Image src={sideBackGroundImage} alt="background" className='w-full h-full object-contain xl:object-cover rounded-lg' />
                         </div>
                     </div>
+                    {!isRegisterSuccess && <ErrorAlert error="Registration Failed" />}
                     <form
                         onSubmit={handleSubmit(onSubmit)}
                         className="w-11/12 sm:w-[85%] h-[60%] sm:h-[70%] md:h-[75%] xl:h-[85%] rounded-lg p-2 sm:p-5 xl:p-10 flex flex-col gap-y-5 xl:justify-between">
@@ -81,7 +111,9 @@ const page = () => {
                             </label>
                         </div>
 
-                        <button className="relative inline-flex items-center w-full justify-center py-3 text-lg font-medium tracking-tighter bg-gray-800 rounded-md group mt-10">
+                        <button
+                            type='submit'
+                            className="relative inline-flex items-center w-full justify-center py-3 text-lg font-medium tracking-tighter bg-gray-800 rounded-md group mt-10">
                             <span className="absolute inset-0 w-full h-full mt-1 ml-1 transition-all duration-300 ease-in-out bg-[#3d7888] rounded-md group-hover:mt-0 group-hover:ml-0"></span>
                             <span className="absolute inset-0 w-full h-full bg-[#7ccde3] rounded-md "></span>
                             <span className="absolute inset-0 w-full h-full transition-all duration-200 ease-in-out delay-100 bg-[#3d7888] rounded-md opacity-0 group-hover:opacity-100 "></span>
@@ -94,4 +126,4 @@ const page = () => {
     )
 }
 
-export default page
+export default Register

@@ -9,5 +9,6 @@ body {
 @layer base {
   :root {
     --radius: 0.5rem;
+    background-color: #121212;
   }
 }

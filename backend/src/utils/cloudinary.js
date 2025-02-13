@@ -15,11 +15,11 @@ const uploadOnCloudinary = async (localFilePath) => {
 
     try {
         if (!localFilePath) return null
-        const res = await cloudinary.uploader?.upload(localFilePath, {
+        const res = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "image",
         })
 
-        console.log("File is uploaded on cloudinary.., URL: ", res?.url)
+        return res
     } catch (error) {
 
         // remove the locally saved temp file if the upload fails

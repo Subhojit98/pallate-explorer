@@ -17,6 +17,7 @@ app.use(cookieParser())
 // Routes Import ->
 
 import userRouter from './routes/user.routes.js'
-
+import imageUploadRoute from './routes/imageUpload.routes.js'
 app.use("/api/v1/users", userRouter)
+app.use("/api/v1/users", imageUploadRoute)
 export { app }

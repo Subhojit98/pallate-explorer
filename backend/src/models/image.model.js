@@ -3,13 +3,20 @@ import { model, Schema } from 'mongoose'
 
 const imageSchema = Schema({
 
-    image: {
+    imageUrl: {
         type: String,
+        required: true,
     },
 
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        default: null
+    },
     colorPallets: {
         type: [String],
         required: true,
+        index: true
     },
 
     tags: {
@@ -18,7 +25,7 @@ const imageSchema = Schema({
         index: true
     }
 }, {
-    timeStamps: true
+    timestamps: true
 }
 )
 

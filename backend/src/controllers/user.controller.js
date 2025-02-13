@@ -65,6 +65,9 @@ const registerUser = asyncHandeler(async (req, res) => {
         acceptConditions
     })
 
+    const { refreshToken, accessToken } = await generateAccessTokenAndrefreshTokens(user._id)
+
+
     const registeredUser = await User.findById(user._id).select("-password -refreshToken")
 
     if (!registeredUser) {
@@ -104,7 +107,7 @@ const loginUser = asyncHandeler(async (req, res) => {
 
     const { refreshToken, accessToken } = await generateAccessTokenAndrefreshTokens(user._id)
 
-    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken -myUploades -savedPallates")
 
     return res
         .status(200)
@@ -139,4 +142,34 @@ const logOutUser = asyncHandeler(async (req, res) => {
         .clearCookie("refreshToken", cookieOptions)
         .json(new ApiResponce(200, {}, "user loggeed out successfully"))
 })
-export { registerUser, loginUser, logOutUser }
+
+const refreshAccessToken = asyncHandeler(async (req, res) => {
+
+    const refreshToken = req.cookies?.refreshToken
+
+    if (!refreshToken) {
+        throw new ApiError(401, "refreshToken is missing !!..., please login again")
+    }
+
+    try {
+
+        const decodedInfo = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+
+        const user = await User.findById(decodedInfo?.id)
+
+        if (!user) {
+            throw new ApiError(404, "User not found. Please log in again.")
+        }
+
+        const { accessToken, refreshToken: newRefreshToken } = await generateAccessTokenAndrefreshTokens(user._id)
+
+        return res.cookie("accessToken", accessToken, { httpOnly: true, secure: true })
+            .cookie("refreshToken", newRefreshToken, { httpOnly: true, secure: true })
+            .json(new ApiResponce(200, "Access token refreshed successfully"))
+    } catch (error) {
+        res.clearCookie("accessToken", cookieOptions)
+            .clearCookie("refreshToken", cookieOptions)
+        throw new ApiError(403, "Invalid or expired refresh token. Please log in again.")
+    }
+})
+export { registerUser, loginUser, logOutUser, refreshAccessToken }
